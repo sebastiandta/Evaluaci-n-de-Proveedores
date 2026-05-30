@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación Comercial de Proveedores</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #2980b9;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --success: #27ae60;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px 10px;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        p.description {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+        .section-title {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 35px 0 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .question-block {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fdfdfd;
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .question-text {
+            font-weight: bold;
+            font-size: 1.05em;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+        .question-help {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .option-label {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .option-label:hover {
+            background: #eef2f5;
+            border-color: #ced4da;
+        }
+        .option-label input {
+            margin-right: 15px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        .points-badge {
+            margin-left: auto;
+            background: #e0e0e0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: #555;
+            font-weight: bold;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 40px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #1f6391;
+        }
+        #result-section {
+            display: none;
+            text-align: center;
+            padding: 30px 20px;
+            background: #fff;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .score-percentage {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .score-fraction {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: white;
+            border-radius: 30px;
+            margin-bottom: 20px;
+        }
+        .status-desc {
+            font-size: 1.1em;
+            color: #555;
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        /* Colores del Semáforo */
+        .color-green { background-color: var(--success); }
+        .color-yellow { background-color: var(--warning); color: #333; }
+        .color-red { background-color: var(--danger); }
+        .text-green { color: var(--success); }
+        .text-yellow { color: #d4ac0d; }
+        .text-red { color: var(--danger); }
+
+        /* Ajustes para Celulares */
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            h1 { font-size: 1.5em; }
+            .option-label { padding: 12px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Evaluación Comercial de Proveedores</h1>
+    <p class="description">Herramienta de auditoría de MP, ME o Suministros. Evalúa los criterios para conocer el estatus del proveedor.</p>
+    
+    <form id="evaluation-form">
+        <div id="form-content"></div>
+        <button type="button" onclick="calculateEvaluation()">Generar Resultado del Proveedor</button>
+    </form>
+
+    <div id="result-section">
+        <h2>Resultado de la Auditoría</h2>
+        <div class="score-percentage" id="final-percentage">0%</div>
+        <div class="score-fraction" id="final-fraction">0 / 0 puntos</div>
+        <div class="status-badge" id="status-badge">Estatus</div>
+        <div class="status-desc" id="status-description"></div>
+        <button type="button" style="background-color: var(--primary);" onclick="location.reload()">Realizar Nueva Evaluación</button>
+    </div>
+</div>
+
+<script>
+    // Base de datos de preguntas extraída de la matriz
+    const evaluationData = [
+        {
+            aspect: "1. FINANCIEROS",
+            questions: [
+                {
+                    id: "q1_1", text: "1.1 Plazo de Pagos", help: "Evalúa el plazo de crédito otorgado según estándar del mercado.",
+                    options: [
+                        { label: "30 días", value: 0 },
+                        { label: "45 días", value: 1 },
+                        { label: "60 días (o más)", value: 2 }
+                    ]
+                }
+            ]
+        },
+        {
+            aspect: "2. COMERCIALES",
+            questions: [
+                {
+                    id: "q2_1", text: "2.1 Precios Competitivos", help: "Comparación de sus tarifas con el estándar del mercado actual.",
+                    options: [
+                        { label: "Por encima del mercado", value: 0 },
+                        { label: "Igual al mercado", value: 1 },
+                        { label: "Por debajo del mercado", value: 2 }
+                    ]
+                },
+                {
+                    id: "q2_2", text: "2.2 Alineación con los inductores del costo", help: "Está atento a la modificación de los inductores para su revisión periódica.",
+                    options: [
+                        { label: "Baja / Nula alineación", value: 0 },
+                        { label: "Alineación parcial", value: 1 },
+                        { label: "Totalmente alineado", value: 2 }
+                    ]
+                },
+                {
+                    id: "q2_3", text: "2.3 Visión y Desarrollo Estratégico", help: "Alineación con Objetivos de Sostenibilidad, Innovación y Crecimiento Rentable.",
+                    options: [
+                        { label: "No hay alineación", value: 0 },
+                        { label: "Alineación Media", value: 1 },
+                        { label: "Alta alineación", value: 2 }
+                    ]
+                }
+            ]
+        },
+        {
+            aspect: "3. SERVICIO",
+            questions: [
+                {
+                    id: "q3_1", text: "3.1 Cumplimiento Lead Time acordado", help: "Tiempos de entrega frente a lo requerido por el mercado.",
+                    options: [
+                        { label: "Por encima del tiempo de mercado (Lento)", value: 0 },
+                        { label: "Igual al mercado", value: 1 },
+                        { label: "Por debajo del mercado (Rápido)", value: 2 }
+                    ]
+                },
+                {
+                    id: "q3_2", text: "3.2 Pedidos mínimos", help: "Flexibilidad en las cantidades de pedido mínimo exigidas.",
+                    options: [
+                        { label: "Exigencia por encima del mercado", value: 0 },
+                        { label: "Igual al mercado", value: 1 },
+                        { label: "Por debajo del mercado / Muy flexible", value: 2 }
+                    ]
+                },
+                {
+                    id: "q3_3", text: "3.3 Flexibilidad en atender pedidos urgentes", help: "Capacidad de reacción del proveedor ante requerimientos fuera de lo planificado.",
+                    options: [
+                        { label: "Baja", value: 0 },
+                        { label: "Media", value: 1 },
+                        { label: "Alta", value: 2 }
+                    ]
+                },
+                {
+                    id: "q3_4", text: "3.4 Asistencia técnica, servicio postventa y capacitación", help: "Calidad del soporte y acompañamiento técnico posterior a la compra.",
+                    options: [
+                        { label: "Baja / Nula", value: 0 },
+                        { label: "Media", value: 1 },
+                        { label: "Alta", value: 2 }
+                    ]
+                },
+                {
+                    id: "q3_5", text: "3.5 Oportunidad de Respuesta a Requerimientos", help: "Rapidez de respuesta y uso de herramientas colaborativas.",
+                    options: [
+                        { label: "Baja", value: 0 },
+                        { label: "Media", value: 1 },
+                        { label: "Alta", value: 2 }
+                    ]
+                },
+                {
+                    id: "q3_6", text: "3.6 Oportunidad de Respuesta en Negociación", help: "Agilidad en el cierre de acuerdos o manejo de discrepancias comerciales.",
+                    options: [
+                        { label: "Baja", value: 0 },
+                        { label: "Media", value: 1 },
+                        { label: "Alta", value: 2 }
+                    ]
+                },
+                {
+                    id: "q3_7", text: "3.7 Oportunidad de Respuesta I+D", help: "Disposición para innovación o desarrollos conjuntos.",
+                    options: [
+                        { label: "Baja", value: 0 },
+                        { label: "Media", value: 1 },
+                        { label: "Alta", value: 2 }
+                    ]
+                }
+            ]
+        },
+        {
+            aspect: "4. DESARROLLO",
+            questions: [
+                {
+                    id: "q4_1", text: "4.1 Propuestas innovadoras", help: "Capacidad de presentar iniciativas de mejora en cualquier aspecto.",
+                    options: [
+                        { label: "Baja", value: 0 },
+                        { label: "Media", value: 1 },
+                        { label: "Alta", value: 2 }
+                    ]
+                },
+                {
+                    id: "q4_2", text: "4.2 Planes de mejora en un futuro", help: "Disposición y estructuración de planes de mejora continua.",
+                    options: [
+                        { label: "No tiene", value: 0 },
+                        { label: "Tiene planes estructurados", value: 2 }
+                    ]
+                }
+            ]
+        },
+        {
+            aspect: "5. SOSTENIBILIDAD Y DERECHOS HUMANOS",
+            questions: [
+                {
+                    id: "q5_1", text: "5.1 Mecanismos para Libertad de Asociación", help: "Cuenta con políticas comunicadas de apoyo a la libertad de asociación.",
+                    options: [
+                        { label: "No cumple / No tiene", value: 0 },
+                        { label: "Sí tiene y cuenta con canales", value: 2 }
+                    ]
+                },
+                {
+                    id: "q5_2", text: "5.2 Evidencia de Libertad de asociación", help: "Durante los últimos 12 meses, ¿se han presentado quejas por amenazas a la libertad de asociación?",
+                    options: [
+                        { label: "Sí se han presentado quejas", value: 0 },
+                        { label: "No se han presentado quejas", value: 2 }
+                    ]
+                },
+                {
+                    id: "q5_3", text: "5.3 Mecanismos de Control de Trabajo Infantil", help: "Políticas comunicadas de forma explícita en contra del trabajo infantil.",
+                    options: [
+                        { label: "No tiene", value: 0 },
+                        { label: "Sí tiene canales y mecanismos", value: 2 }
+                    ]
+                },
+                {
+                    id: "q5_4", text: "5.4 Evidencia de Trabajo Infantil", help: "Durante los últimos 12 meses, ¿se evidenciaron casos o hubo quejas?",
+                    options: [
+                        { label: "Hay quejas o evidencia", value: 0 },
+                        { label: "No hay casos ni evidencia", value: 2 }
+                    ]
+                },
+                {
+                    id: "q5_5", text: "5.5 Mecanismos de Control de Trabajo Forzoso", help: "Políticas contra jornadas excesivas, coacción o retención de documentos.",
+                    options: [
+                        { label: "No tiene", value: 0 },
+                        { label: "Sí tiene mecanismos estructurados", value: 2 }
+                    ]
+                }
+            ]
+        }
+    ];
+
+    const formContent = document.getElementById('form-content');
+    let maxPossibleScore = 0;
+
+    // Renderizar el formulario dinámicamente
+    evaluationData.forEach((section) => {
+        let sectionHtml = `<div class="section-title">${section.aspect}</div>`;
+        
+        section.questions.forEach((q) => {
+            // Encontrar el valor máximo posible para esta pregunta para el cálculo final
+            let maxVal = Math.max(...q.options.map(o => o.value));
+            maxPossibleScore += maxVal;
+
+            sectionHtml += `
+                <div class="question-block">
+                    <div class="question-text">${q.text}</div>
+                    <div class="question-help">${q.help}</div>
+                    <div class="options-container">
+            `;
+            
+            q.options.forEach((opt) => {
+                sectionHtml += `
+                    <label class="option-label">
+                        <input type="radio" name="${q.id}" value="${opt.value}">
+                        <span>${opt.label}</span>
+                        <span class="points-badge">${opt.value} pts</span>
+                    </label>
+                `;
+            });
+            
+            sectionHtml += `</div></div>`;
+        });
+        formContent.innerHTML += sectionHtml;
+    });
+
+    function calculateEvaluation() {
+        let totalScore = 0;
+        let allAnswered = true;
+        let unansweredQuestions = [];
+
+        // Validar y sumar puntos
+        evaluationData.forEach((section) => {
+            section.questions.forEach((q) => {
+                const selected = document.querySelector(`input[name="${q.id}"]:checked`);
+                if (selected) {
+                    totalScore += parseInt(selected.value);
+                } else {
+                    allAnswered = false;
+                    unansweredQuestions.push(q.text.split(' ')[0]); // Guarda el número de la pregunta
+                }
+            });
+        });
+
+        if (!allAnswered) {
+            alert(`Por favor, responde a todas las preguntas antes de generar el resultado.\nTe faltan: ${unansweredQuestions.join(', ')}`);
+            return;
+        }
+
+        // Calcular porcentaje
+        const percentage = Math.round((totalScore / maxPossibleScore) * 100);
+
+        // Ocultar formulario, mostrar resultados
+        document.getElementById('evaluation-form').style.display = 'none';
+        document.getElementById('result-section').style.display = 'block';
+        
+        const percElement = document.getElementById('final-percentage');
+        const fracElement = document.getElementById('final-fraction');
+        const badgeElement = document.getElementById('status-badge');
+        const descElement = document.getElementById('status-description');
+
+        percElement.innerText = `${percentage}%`;
+        fracElement.innerText = `Puntaje obtenido: ${totalScore} / ${maxPossibleScore} pts`;
+
+        // Lógica del Semáforo
+        if (percentage >= 85) {
+            percElement.className = "score-percentage text-green";
+            badgeElement.className = "status-badge color-green";
+            badgeElement.innerText = "🟢 Proveedor Aprobado / Confiable";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor cumple satisfactoriamente con los estándares requeridos en políticas comerciales, de servicio, desarrollo y cumplimiento de derechos humanos.<br><br><strong>Acción:</strong> Apto para mantenimiento de relaciones comerciales a largo plazo e integración en proyectos estratégicos de abastecimiento.";
+        } else if (percentage >= 60) {
+            percElement.className = "score-percentage text-yellow";
+            badgeElement.className = "status-badge color-yellow";
+            badgeElement.innerText = "🟡 Proveedor en Desarrollo";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor cumple con las expectativas mínimas, pero presenta brechas importantes en áreas de servicio, financiamiento o políticas internas.<br><br><strong>Acción:</strong> Requiere la estructuración de un plan de acción conjunto con compromisos y fechas de revisión para cerrar las brechas identificadas.";
+        } else {
+            percElement.className = "score-percentage text-red";
+            badgeElement.className = "status-badge color-red";
+            badgeElement.innerText = "🔴 Proveedor Condicionado / Rechazado";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor representa un riesgo alto para la cadena de suministro por incumplimiento de normativas críticas (como derechos humanos) o deficiencia severa en nivel de servicio y costos.<br><br><strong>Acción:</strong> Se sugiere condicionar nuevas adjudicaciones, buscar alternativas en el mercado o proceder a la desvinculación comercial si se infringen políticas cero tolerancia.";
+        }
+
+        window.scrollTo(0, 0);
+    }
+</script>
+
+</body>
+</html>
