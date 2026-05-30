@@ -13,6 +13,7 @@
             --card-bg: #ffffff;
             --success: #27ae60;
             --warning: #f1c40f;
+            --orange: #e67e22;
             --danger: #e74c3c;
         }
         body {
@@ -40,8 +41,28 @@
         p.description {
             text-align: center;
             color: #7f8c8d;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 0.95em;
+        }
+        .doc-section {
+            background-color: #e8f4f8;
+            border-left: 4px solid var(--accent);
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .doc-section h3 {
+            margin-top: 0;
+            color: var(--accent);
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        .doc-section ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 0.9em;
+            color: #555;
+            columns: 2;
         }
         .section-title {
             background-color: var(--primary);
@@ -86,10 +107,16 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background 0.2s, border-color 0.2s;
+            min-height: 44px; /* Mejora usabilidad móvil */
+            word-wrap: break-word;
         }
         .option-label:hover {
             background: #eef2f5;
             border-color: #ced4da;
+        }
+        .option-label span:first-of-type {
+            flex: 1;
+            margin-right: 10px;
         }
         .option-label input {
             margin-right: 15px;
@@ -104,6 +131,7 @@
             font-size: 0.8em;
             color: #555;
             font-weight: bold;
+            white-space: nowrap;
         }
         button {
             display: block;
@@ -161,16 +189,25 @@
         /* Colores del Semáforo */
         .color-green { background-color: var(--success); }
         .color-yellow { background-color: var(--warning); color: #333; }
+        .color-orange { background-color: var(--orange); }
         .color-red { background-color: var(--danger); }
+        
         .text-green { color: var(--success); }
         .text-yellow { color: #d4ac0d; }
+        .text-orange { color: var(--orange); }
         .text-red { color: var(--danger); }
 
-        /* Ajustes para Celulares */
+        /* Ajustes Responsivos para Celulares */
         @media (max-width: 600px) {
-            .container { padding: 15px; }
-            h1 { font-size: 1.5em; }
-            .option-label { padding: 12px 10px; }
+            body { padding: 10px 5px; }
+            .container { padding: 20px 15px; }
+            h1 { font-size: 1.4em; }
+            .doc-section ul { columns: 1; }
+            .section-title { font-size: 1.1em; padding: 10px; margin: 25px 0 10px 0; }
+            .option-label { flex-direction: column; align-items: flex-start; padding: 12px; }
+            .option-label input { margin-bottom: 8px; }
+            .points-badge { margin-left: 0; margin-top: 8px; align-self: flex-start; }
+            .status-badge { font-size: 1.1em; padding: 10px 15px; }
         }
     </style>
 </head>
@@ -180,6 +217,18 @@
     <h1>Evaluación Comercial de Proveedores</h1>
     <p class="description">Herramienta de auditoría de MP, ME o Suministros. Evalúa los criterios para conocer el estatus del proveedor.</p>
     
+    <div class="doc-section">
+        <h3>📄 Documentos Previos Solicitables</h3>
+        <ul>
+            <li>Certificaciones ISO, OHSAS, BASC, etc.</li>
+            <li>Programas de mantenimiento (preventivo y correctivo)</li>
+            <li>Mapa de Riesgos / Plan de Acción / Plan de continuidad</li>
+            <li>Certificaciones y permisos ambientales</li>
+            <li>Ejercicio de trazabilidad de los materiales</li>
+            <li>Registros Gestor de Residuos para ME</li>
+        </ul>
+    </div>
+
     <form id="evaluation-form">
         <div id="form-content"></div>
         <button type="button" onclick="calculateEvaluation()">Generar Resultado del Proveedor</button>
@@ -196,7 +245,7 @@
 </div>
 
 <script>
-    // Base de datos de preguntas extraída de la matriz
+    // Base de datos de preguntas extraída de la matriz completa
     const evaluationData = [
         {
             aspect: "1. FINANCIEROS",
@@ -298,6 +347,13 @@
                         { label: "Media", value: 1 },
                         { label: "Alta", value: 2 }
                     ]
+                },
+                {
+                    id: "q3_8", text: "3.8 Participación en programas de formaciones", help: "Participación en programas de formaciones de Grupo.",
+                    options: [
+                        { label: "No aplica / No participa", value: 0 },
+                        { label: "Sí participa", value: 2 }
+                    ]
                 }
             ]
         },
@@ -357,6 +413,13 @@
                     options: [
                         { label: "No tiene", value: 0 },
                         { label: "Sí tiene mecanismos estructurados", value: 2 }
+                    ]
+                },
+                {
+                    id: "q5_6", text: "5.6 No evidencia de Trabajo Forzoso", help: "Durante los últimos 12 meses, NO se han presentado quejas internas ni se evidencia trabajo forzoso.",
+                    options: [
+                        { label: "Hay evidencia o quejas", value: 0 },
+                        { label: "No hay evidencia", value: 2 }
                     ]
                 }
             ]
@@ -435,22 +498,32 @@
         percElement.innerText = `${percentage}%`;
         fracElement.innerText = `Puntaje obtenido: ${totalScore} / ${maxPossibleScore} pts`;
 
-        // Lógica del Semáforo
-        if (percentage >= 85) {
+        // Lógica de 5 niveles según matriz original
+        if (percentage >= 91) {
             percElement.className = "score-percentage text-green";
             badgeElement.className = "status-badge color-green";
-            badgeElement.innerText = "🟢 Proveedor Aprobado / Confiable";
-            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor cumple satisfactoriamente con los estándares requeridos en políticas comerciales, de servicio, desarrollo y cumplimiento de derechos humanos.<br><br><strong>Acción:</strong> Apto para mantenimiento de relaciones comerciales a largo plazo e integración en proyectos estratégicos de abastecimiento.";
-        } else if (percentage >= 60) {
+            badgeElement.innerText = "🟢 MÁS FAVORABLE";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor cumple de manera sobresaliente con todos los estándares del Grupo Empresarial (91% - 100%).";
+        } else if (percentage >= 81) {
+            percElement.className = "score-percentage text-green";
+            badgeElement.className = "status-badge color-green";
+            badgeElement.innerText = "🟢 FAVORABLE";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor es confiable y cumple con los requisitos comerciales, de servicio y sostenibilidad (81% - 90%).";
+        } else if (percentage >= 61) {
             percElement.className = "score-percentage text-yellow";
             badgeElement.className = "status-badge color-yellow";
-            badgeElement.innerText = "🟡 Proveedor en Desarrollo";
-            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor cumple con las expectativas mínimas, pero presenta brechas importantes en áreas de servicio, financiamiento o políticas internas.<br><br><strong>Acción:</strong> Requiere la estructuración de un plan de acción conjunto con compromisos y fechas de revisión para cerrar las brechas identificadas.";
+            badgeElement.innerText = "🟡 FAVORABLE CONDICIONADO";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> Proveedor apto, pero con brechas que requieren atención o condicionamientos para nuevas adjudicaciones (61% - 80%).";
+        } else if (percentage >= 41) {
+            percElement.className = "score-percentage text-orange";
+            badgeElement.className = "status-badge color-orange";
+            badgeElement.innerText = "🟠 EN DESARROLLO";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> Puntaje deficiente. Requiere la estructuración de un plan de acción conjunto urgente para cerrar brechas (41% - 60%).";
         } else {
             percElement.className = "score-percentage text-red";
             badgeElement.className = "status-badge color-red";
-            badgeElement.innerText = "🔴 Proveedor Condicionado / Rechazado";
-            descElement.innerHTML = "<strong>Diagnóstico:</strong> El proveedor representa un riesgo alto para la cadena de suministro por incumplimiento de normativas críticas (como derechos humanos) o deficiencia severa en nivel de servicio y costos.<br><br><strong>Acción:</strong> Se sugiere condicionar nuevas adjudicaciones, buscar alternativas en el mercado o proceder a la desvinculación comercial si se infringen políticas cero tolerancia.";
+            badgeElement.innerText = "🔴 NO FAVORABLE";
+            descElement.innerHTML = "<strong>Diagnóstico:</strong> Riesgo alto para la cadena de suministro. No cumple con las políticas o niveles de servicio requeridos (0% - 40%).";
         }
 
         window.scrollTo(0, 0);
